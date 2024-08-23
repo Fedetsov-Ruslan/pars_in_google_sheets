@@ -22,7 +22,7 @@ class Base(DeclarativeBase):
     updated: Mapped[DateTime] = mapped_column(DateTime, default=func.now(), onupdate=func.now())
 
 
-class Games(Base):
+class OldGames(Base):
     __tablename__='old_games'
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
@@ -37,7 +37,7 @@ class Games(Base):
     first_dead: Mapped[str] = mapped_column(String(150), nullable=True)
     winner: Mapped[str] = mapped_column(String(15), nullable=True)
 
-Base.metadata.drop_all(engine, [Games.__table__])
+Base.metadata.drop_all(engine, [OldGames.__table__])
 
 # Создание таблицы заново, если необходимо
 Base.metadata.create_all(engine)
@@ -138,7 +138,7 @@ processed_tables = [process_table(table) for table in tables]
 processed_tables.reverse()
 for table in processed_tables:
     date_g = datetime.datetime.strptime(table['date'], '%Y-%m-%d').date()
-    obj = Games(
+    obj = OldGames(
         types_game = 'ranked',
         date_game = date_g,
         gamers = table['player_nicks'],

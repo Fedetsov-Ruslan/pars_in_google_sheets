@@ -70,7 +70,7 @@ class BestStep(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     game_id: Mapped[int] = mapped_column(ForeignKey('games.id'), nullable=False)
-    seat_number: Mapped[int] = mapped_column(Integer, nullable=False)
+    seat_number: Mapped[int] = mapped_column(Integer, nullable=True)
 
 
 # Base.metadata.create_all(engine)
@@ -86,7 +86,7 @@ for old_game in session.query(OldGames).order_by(OldGames.id).all():
     session.add(new_game)
     session.flush()  # Чтобы получить сгенерированный id
 
-    # Создаем записи в GameResults
+   
     for idx, player in enumerate(old_game.gamers):
         person = session.execute(select(Users).filter_by(nickname=player)).first() 
         if person is None:
@@ -100,7 +100,7 @@ for old_game in session.query(OldGames).order_by(OldGames.id).all():
         user = session.query(Users).filter_by(nickname=player).first()
         game_result = GameResults(
             game_id=new_game.id,
-            player_id=user.id,  # Функция для получения id игрока
+            player_id=user.id, 
             seat_number=idx + 1,  # Номер места
             role=old_game.roles[idx],
             fols=old_game.fols[idx],
@@ -109,12 +109,14 @@ for old_game in session.query(OldGames).order_by(OldGames.id).all():
         )
         session.add(game_result)
 
-    # Создаем записи в BestSteps
     for seat in old_game.best_step:
-        best_step = BestStep(
-            game_id=new_game.id,
-            seat_number=user.id
-        )
-        session.add(best_step)
+        if seat != '':
+            user = user_id = session.query(Users.id).join(GameResults, GameResults.player_id == Users.id).filter(Users.nickname == seat).first()
+            best_step = BestStep(
+                game_id=new_game.id,
+                seat_number=user[0]
+            )
+            session.add(best_step)
+        
 
 session.commit()
