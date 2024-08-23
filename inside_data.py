@@ -23,7 +23,7 @@ class Base(DeclarativeBase):
 
 
 class Games(Base):
-    __tablename__='games'
+    __tablename__='old_games'
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     types_game: Mapped[str] = mapped_column(String(15), nullable=False)
@@ -32,6 +32,7 @@ class Games(Base):
     roles: Mapped[list[str]] = mapped_column(ARRAY(String), nullable=False)
     fols: Mapped[list[int]] = mapped_column(ARRAY(Integer), nullable=False)
     points: Mapped[list[float]] = mapped_column(ARRAY(Float), nullable=False)
+    dop_points: Mapped[list[float]] = mapped_column(ARRAY(Float), nullable=True)
     best_step: Mapped[list[str]] = mapped_column(ARRAY(String), nullable=True)
     first_dead: Mapped[str] = mapped_column(String(150), nullable=True)
     winner: Mapped[str] = mapped_column(String(15), nullable=True)
@@ -60,6 +61,7 @@ def process_table(table):
     role = []
     fouls = []
     scores = []
+    dop_scores = []
     
     for line in lines[2:]:
         if line.strip():
@@ -73,7 +75,9 @@ def process_table(table):
                     row[6] = row[6].strip()
                     dp = '.'.join(row[5:7])
                     dp = float(dp.strip('"'))
-                    scores[-1] += dp
+                    dop_scores.append(dp)
+                else:
+                    dop_scores.append(0)
 
     for i in range(len(role)):
         if role[i] == '':
@@ -109,6 +113,7 @@ def process_table(table):
         'role': role,
         'fouls': fouls,
         'scores': scores,
+        'dop_scores': dop_scores,
         'winner_team': winner_team,
         'pu': pu,
         'lh': lh,
@@ -140,9 +145,10 @@ for table in processed_tables:
         roles = table['role'],
         fols = table['fouls'],
         points = table['scores'],
+        dop_points = table['dop_scores'],
         best_step = table['lh'],
         first_dead = table['pu'],
-        winner = table['winner_team']        
+        winner = table['winner_team'].split()[0]        
     )
     session.add(obj)
     session.commit()
